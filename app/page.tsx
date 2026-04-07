@@ -1,65 +1,133 @@
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
+import { Card } from "@/components/card";
 
 export default function Home() {
+  const [suggestion, setSuggestion] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const canSubmit = useMemo(
+    () => suggestion.trim().length > 0 && !isSubmitting,
+    [isSubmitting, suggestion],
+  );
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          suggestion,
+        }),
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to submit suggestion.");
+      }
+
+      setSuggestion("");
+      toast.success("Suggestion submitted successfully.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10 sm:px-6">
+      <Card
+        title="Indra HR Anonymous Suggestion Box"
+        subtitle="Share feedback, ideas, or concerns with Indra HR."
+      >
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <Image
+            src="/indra logo.png"
+            alt="Indra logo"
+            width={52}
+            height={52}
+            className="h-12 w-12 rounded object-contain"
+          />
+          <p className="text-sm font-semibold text-slate-800">Indra HR</p>
+        </div>
+
+        <div className="rounded-xl border-2 border-rose-300 bg-rose-50 p-4 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-wide text-rose-800">
+            Highly Confidential Notice
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <p className="mt-2 text-sm text-rose-900">
+            This suggestion box is highly confidential. HR will review suggestions,
+            but they will not know who submitted what unless identifying details are
+            included in your message.
+          </p>
+          <p className="mt-3 text-sm font-medium text-rose-900">
+            Suggestions to stay fully anonymous:
+          </p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-rose-900">
+            <li>Do not include your name, role, team, or contact details.</li>
+            <li>Avoid mentioning specific dates or events tied only to you.</li>
+            <li>Focus on the issue and impact, not personal identifiers.</li>
+          </ul>
+
+          <div
+            lang="si"
+            className="mt-4 border-t border-rose-200 pt-4 text-[15px] leading-relaxed text-rose-900 [font-family:system-ui,'Iskoola_Pota','Nirmala_UI','Noto_Sans_Sinhala',sans-serif]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <p className="text-sm font-semibold text-rose-800">
+              ඉතා රහස්‍යතා දැනුම්දීමක් (සිංහල)
+            </p>
+            <p className="mt-2 text-sm">
+              මෙම යෝජනා පෙට්ටිය ඉතා රහස්‍යයි. මානව සම්පත් කාණ්ඩය යෝජනා සමාලෝචනය කරනු ඇත,
+              එහෙත් ඔබගේ පණිවිඩය තුළ හඳුනාගැනීමට උපකාරී විස්තර ඇතුළත් නොකළහොත්, ඔබ කවුරුන්ද
+              යන්න ඔවුන්ට නොදැනෙනු ඇත.
+            </p>
+            <p className="mt-3 text-sm font-medium">
+              සම්පූර්ණයෙන්ම නිර්නාමිකව සිටීමට උපදේශන:
+            </p>
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
+              <li>ඔබගේ නම, තනතුර, කණ්ඩායම හෝ සම්බන්ධතා විස්තර ඇතුළත් නොකරන්න.</li>
+              <li>
+                ඔබට පමණක් වැදගත් වන නිශ්චිත දින හෝ සිදුවීම් සඳහන් කිරීමෙන් වළකින්න.
+              </li>
+              <li>පුද්ගලික හඳුනාගැනීම් වෙනුවට ගැටලුව සහ එහි බලපෑම මත අවධානය යොමු කරන්න.</li>
+            </ul>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-5 grid gap-4">
+          <label className="grid gap-1 text-sm font-medium text-slate-700">
+            Suggestion <span className="text-rose-600">*</span>
+            <textarea
+              required
+              rows={6}
+              value={suggestion}
+              onChange={(event) => setSuggestion(event.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-blue-300 transition focus:ring-2"
+              placeholder="Share your suggestion..."
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </label>
+
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="inline-flex items-center justify-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            {isSubmitting ? "Submitting..." : "Submit Suggestion"}
+          </button>
+        </form>
+      </Card>
+
+    </main>
   );
 }

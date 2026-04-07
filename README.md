@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Anonymous HR Suggestion Box
 
-## Getting Started
+Full-stack anonymous HR suggestion box built with Next.js App Router, Supabase (PostgreSQL), Tailwind CSS, and ready for Vercel deployment.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Public anonymous suggestion form at `/`
+- Admin panel at `/admin` with simple password protection
+- Filter by status
+- Latest-first sorting by submission date
+- Inline status updates (`New`, `Reviewed`, `Actioned`)
+- Loading states, empty states, error handling, and toast notifications
+- No IP or hidden tracking fields stored
+
+## Project Structure
+
+- `app/page.tsx`: public suggestion form
+- `app/admin/page.tsx`: admin panel UI
+- `app/api/suggestions/route.ts`: POST + GET suggestions
+- `app/api/suggestions/[id]/route.ts`: PATCH status updates
+- `lib/supabase.ts`: Supabase server client
+- `supabase/schema.sql`: database schema
+
+## Supabase Setup
+
+1. Create a Supabase project.
+2. Open SQL Editor and run:
+
+```sql
+-- from supabase/schema.sql
+create extension if not exists "pgcrypto";
+
+create table if not exists public.suggestions (
+  id uuid primary key default gen_random_uuid(),
+  suggestion text not null,
+  status text not null default 'New',
+  created_at timestamptz not null default now()
+);
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Ensure your API key has access to insert/select/update on `suggestions` (configure RLS policies if RLS is enabled).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local` and fill in:
 
-## Learn More
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+ADMIN_PASSWORD=your_admin_panel_password
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Run Locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Deploy to Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push your repository to GitHub/GitLab/Bitbucket.
+2. Import project into Vercel.
+3. Add the environment variables from `.env.example` in Vercel Project Settings.
+4. Deploy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+After deployment:
+- Public users submit at `/`
+- HR admins access `/admin` using `ADMIN_PASSWORD`
