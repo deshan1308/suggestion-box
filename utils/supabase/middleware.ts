@@ -9,7 +9,14 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { url, anonKey } = getSupabaseEnv();
+  let url: string;
+  let anonKey: string;
+  try {
+    ({ url, anonKey } = getSupabaseEnv());
+  } catch {
+    // Fail-safe in production: if env vars are missing, do not crash all routes.
+    return supabaseResponse;
+  }
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -26,7 +33,11 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // Ignore auth refresh errors here; route handlers/pages handle auth-specific failures.
+  }
 
   return supabaseResponse;
 }
